@@ -1317,4 +1317,116 @@ function buildDashboard(){
   </div>
 
   <div class="db-section-title">🏆 Top Win-Rate Active Roles</div>
-  <div class="db-card" style=
+  <div class="db-card" style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr>
+        <th style="text-align:left;padding:6px 8px;font-size:10px;color:#475569;text-transform:uppercase;font-family:monospace;border-bottom:1px solid #334155">Company</th>
+        <th style="text-align:left;padding:6px 8px;font-size:10px;color:#475569;text-transform:uppercase;font-family:monospace;border-bottom:1px solid #334155">Role</th>
+        <th style="text-align:left;padding:6px 8px;font-size:10px;color:#475569;text-transform:uppercase;font-family:monospace;border-bottom:1px solid #334155">Location</th>
+        <th style="text-align:left;padding:6px 8px;font-size:10px;color:#475569;text-transform:uppercase;font-family:monospace;border-bottom:1px solid #334155">Win Rate</th>
+        <th style="text-align:left;padding:6px 8px;font-size:10px;color:#475569;text-transform:uppercase;font-family:monospace;border-bottom:1px solid #334155">Status</th>
+      </tr></thead>
+      <tbody>
+        ${topRoles.length===0?'<tr><td colspan="5" style="padding:12px;color:#475569;font-size:11px">No scored roles yet</td></tr>':
+          topRoles.map(j=>`<tr style="border-bottom:1px solid #1E293B">
+            <td style="padding:6px 8px;font-size:12px;font-weight:600;color:#F1F5F9">${esc(j.co)}</td>
+            <td style="padding:6px 8px;font-size:11px;color:#CBD5E1">${esc(j.role)}</td>
+            <td style="padding:6px 8px;font-size:11px;color:#64748B">${esc(j.loc||'—')}</td>
+            <td style="padding:6px 8px;font-size:12px;font-weight:700;color:#4ADE80;font-family:monospace">${esc(j.skillFitScore||'—')}</td>
+            <td style="padding:6px 8px;font-size:11px;color:#94A3B8">${esc(j.statusLabel||j.status)}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="db-section-title">📋 Recent Applications</div>
+  <div class="db-card" style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr>
+        <th style="text-align:left;padding:6px 8px;font-size:10px;color:#475569;text-transform:uppercase;font-family:monospace;border-bottom:1px solid #334155">Company</th>
+        <th style="text-align:left;padding:6px 8px;font-size:10px;color:#475569;text-transform:uppercase;font-family:monospace;border-bottom:1px solid #334155">Role</th>
+        <th style="text-align:left;padding:6px 8px;font-size:10px;color:#475569;text-transform:uppercase;font-family:monospace;border-bottom:1px solid #334155">Applied</th>
+        <th style="text-align:left;padding:6px 8px;font-size:10px;color:#475569;text-transform:uppercase;font-family:monospace;border-bottom:1px solid #334155">Status</th>
+      </tr></thead>
+      <tbody>
+        ${recent.length===0?'<tr><td colspan="4" style="padding:12px;color:#475569;font-size:11px">No recent submissions</td></tr>':
+          recent.map(j=>`<tr style="border-bottom:1px solid #1E293B">
+            <td style="padding:6px 8px;font-size:12px;font-weight:600;color:#F1F5F9">${esc(j.co)}</td>
+            <td style="padding:6px 8px;font-size:11px;color:#CBD5E1">${esc(j.role)}</td>
+            <td style="padding:6px 8px;font-size:11px;color:#94A3B8;font-family:monospace">${esc(j.applied||'—')}</td>
+            <td style="padding:6px 8px;font-size:11px;color:#94A3B8">${esc(j.statusLabel||j.status)}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>
+`;
+  }catch(e){
+    el.innerHTML='<div style="color:#EF4444;padding:20px">Dashboard error: '+e.message+'</div>';
+  }
+}
+
+
+// ═══════════════════════════════════════════════════
+// TODAY AGENDA (tracker tab banner)
+// ═══════════════════════════════════════════════════
+function buildTodayAgenda(){
+  const el=document.getElementById('today-agenda-body');
+  if(!el)return;
+  try{
+    const today=new Date();today.setHours(0,0,0,0);
+    const plus7=new Date(today);plus7.setDate(today.getDate()+7);
+    const todayStr=today.toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+    const tdEl=document.getElementById('today-display');if(tdEl)tdEl.textContent=todayStr;
+    const parseFUa=v=>{if(!v||v==='\u2014'||v==='To confirm')return null;const d=new Date(v);return isNaN(d)?null:d;};
+    const active=jobs.filter(j=>j.status!=='closed');
+    const overdue=active.filter(j=>{const d=parseFUa(j.followup);return d&&d<today;});
+    const dueToday=active.filter(j=>{const d=parseFUa(j.followup);return d&&d.getTime()===today.getTime();});
+    const dueNext7=active.filter(j=>{const d=parseFUa(j.followup);return d&&d>today&&d<=plus7;});
+    const hot=jobs.filter(j=>j.status==='hot');
+    let html=`<div class="agenda-date">Today: ${todayStr}</div>`;
+    if(overdue.length){
+      html+=`<div class="agenda-section overdue"><span class="agenda-label">OVERDUE FOLLOW-UPS (${overdue.length})</span>`;
+      overdue.slice(0,5).forEach(j=>{html+=`<div class="agenda-item">${esc(j.co)} - ${esc(j.role)}<span class="agenda-fu"> was ${fmtFollowup(j.followup)}</span></div>`;});
+      html+=`</div>`;
+    }
+    if(dueToday.length){
+      html+=`<div class="agenda-section due-today"><span class="agenda-label">DUE TODAY (${dueToday.length})</span>`;
+      dueToday.forEach(j=>{html+=`<div class="agenda-item">${esc(j.co)} - ${esc(j.role)}<span class="agenda-fu"> ${esc(j.next||'').substring(0,60)}</span></div>`;});
+      html+=`</div>`;
+    }
+    if(dueNext7.length){
+      html+=`<div class="agenda-section"><span class="agenda-label" style="color:#38BDF8">NEXT 7 DAYS (${dueNext7.length})</span>`;
+      dueNext7.slice(0,5).forEach(j=>{html+=`<div class="agenda-item">${esc(j.co)} - ${esc(j.role)}<span class="agenda-fu"> ${fmtFollowup(j.followup)}</span></div>`;});
+      html+=`</div>`;
+    }
+    if(hot.length){
+      html+=`<div class="agenda-section"><span class="agenda-label" style="color:#EF4444">HOT ROLES (${hot.length})</span>`;
+      hot.forEach(j=>{html+=`<div class="agenda-item">${esc(j.co)} - ${esc(j.statusLabel||j.role).substring(0,80)}</div>`;});
+      html+=`</div>`;
+    }
+    if(!overdue.length&&!dueToday.length&&!dueNext7.length&&!hot.length){
+      html+=`<div style="color:#4ADE80;font-size:12px">No follow-ups due today.</div>`;
+    }
+    el.innerHTML=html;
+  }catch(e){
+    const el2=document.getElementById('today-agenda-body');
+    if(el2)el2.innerHTML='<span style="color:#64748B;font-size:12px">Agenda unavailable: '+e.message+'</span>';
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// FOLLOW-UPS TAB
+// ═══════════════════════════════════════════════════
+function buildFollowups(){
+  const el=document.getElementById('fu-content');
+  if(!el)return;
+  try{
+    const today=new Date();today.setHours(0,0,0,0);
+    const plus7=new Date(today);plus7.setDate(today.getDate()+7);
+    const parseFUb=v=>{if(!v||v==='\u2014'||v==='To confirm')return null;const d=new Date(v);return isNaN(d)?null:d;};
+    const active=jobs.filter(j=>j.status!=='closed');
+    const overdue=active.filter(j=>{const d=parseFUb(j.followup);return d&&d<today;}).sort((a,b)=>new Date(a.followup)-new Date(b.followup));
+    const dueToday=active.filter(j=>{const d=parseFUb(j.followup);return d&&d.getTime()===today.getTime();});
+    const dueNext7=active.filter(j=>{const d=parseFUb(j.followup);return d&&d>today&&d<=plus7;}).sort((a,b)=>new Date(a.followup)-new Date(b.followup));
+    const hot=jobs.filter(j=>j.status==='hot');
+    const noDate=active.filter(j=>!parseFUb(j.
