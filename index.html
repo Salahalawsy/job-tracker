@@ -270,7 +270,7 @@ td{padding:7px 9px;vertical-align:middle}
 <div class="toolbar">
   <div class="filters"><div id="pills"></div></div>
   <div class="btns">
-    <button class="btn btn-green" onclick="filterToday()" id="todayBtn">📅 Today</button>
+    <input type="date" id="dateFilterInput" onchange="filterByDate(this.value)" title="Filter by date applied" style="background:#1e293b;border:1px solid #475569;color:#CBD5E1;border-radius:6px;padding:5px 8px;font-size:13px;cursor:pointer;">
     <button class="btn" onclick="sortBy('priority')" id="sortPriorityBtn">↓ Priority</button>
     <button class="btn" onclick="sortBy('date')" id="sortDateBtn">↓ Date Applied</button>
     <button class="btn btn-blue" onclick="openAddModal()">+ Add Role</button>
@@ -615,6 +615,7 @@ const laneFg={
 
 let currentFilter='all';
 let currentSort='default';
+let currentDateFilter='';
 let selectedId=null;
 let jobs=[];
 let pendingDeleteId=null;
@@ -714,22 +715,20 @@ function initStats(){
   const clBadge=document.getElementById('tab-closed-count');
   if(clBadge) clBadge.textContent=c.closed||0;
 }
-function filterToday(){
-  const btn=document.getElementById('todayBtn');
-  const isActive=btn.classList.contains('active-today');
-  if(isActive){
-    btn.classList.remove('active-today');
-    btn.style.background='';
-    btn.style.borderColor='';
+function filterByDate(val){
+  const inp=document.getElementById('dateFilterInput');
+  if(!val){
+    currentDateFilter='';
     filterBy('all');
     return;
   }
-  btn.classList.add('active-today');
-  btn.style.background='#14532D';
-  btn.style.borderColor='#4ADE80';
-  currentFilter='__today__';
+  const _mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const parts=val.split('-'); // YYYY-MM-DD
+  const y=parseInt(parts[0]),m=parseInt(parts[1])-1,d=parseInt(parts[2]);
+  currentDateFilter=_mn[m]+' '+d+', '+y;
+  currentFilter='__date__';
   selectedId=null;
-  const d=document.getElementById('detail');if(d)d.classList.remove('open');
+  const det=document.getElementById('detail');if(det)det.classList.remove('open');
   initStats();render();
 }
 function sortBy(mode){
@@ -748,8 +747,8 @@ function sortBy(mode){
 }
 function filterBy(f){
   currentFilter=f; selectedId=null;
-  const btn=document.getElementById('todayBtn');
-  if(btn){btn.classList.remove('active-today');btn.style.background='';btn.style.borderColor='';}
+  const inp=document.getElementById('dateFilterInput');
+  if(inp&&f!=='__date__'){inp.value='';currentDateFilter='';}
 
   const d=document.getElementById('detail');if(d)d.classList.remove('open');
   initStats(); render();
@@ -766,12 +765,8 @@ function getFilteredRows(){
     const d=new Date(j.followup);return d>=today&&d<=plus7;
   });
   if(currentFilter==='confirm')return jobs.filter(j=>j.statusLabel&&j.statusLabel.toLowerCase().includes('needs confirmation'));
-  if(currentFilter==='__today__'){
-    const _mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const _n=new Date();
-    const todayStr=_mn[_n.getMonth()]+' '+_n.getDate()+', '+_n.getFullYear();
-    const todayStr2=_mn[_n.getMonth()]+' 0'+_n.getDate()+', '+_n.getFullYear();
-    return jobs.filter(j=>j.applied&&(j.applied===todayStr||j.applied===todayStr2||j.applied.startsWith(_mn[_n.getMonth()]+' '+_n.getDate())));
+  if(currentFilter==='__date__'){
+    return jobs.filter(j=>j.applied&&j.applied===currentDateFilter);
   }
   return jobs.filter(j=>j.status===currentFilter);
 }
