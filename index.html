@@ -767,8 +767,11 @@ function getFilteredRows(){
   });
   if(currentFilter==='confirm')return jobs.filter(j=>j.statusLabel&&j.statusLabel.toLowerCase().includes('needs confirmation'));
   if(currentFilter==='__today__'){
-    const _d=new Date();const _m=_d.toLocaleDateString('en-US',{month:'short'});const todayStr=_m+' '+_d.getDate()+', '+_d.getFullYear();
-    return jobs.filter(j=>j.applied&&j.applied===todayStr);
+    const _mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const _n=new Date();
+    const todayStr=_mn[_n.getMonth()]+' '+_n.getDate()+', '+_n.getFullYear();
+    const todayStr2=_mn[_n.getMonth()]+' 0'+_n.getDate()+', '+_n.getFullYear();
+    return jobs.filter(j=>j.applied&&(j.applied===todayStr||j.applied===todayStr2||j.applied.startsWith(_mn[_n.getMonth()]+' '+_n.getDate())));
   }
   return jobs.filter(j=>j.status===currentFilter);
 }
