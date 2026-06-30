@@ -1350,33 +1350,3 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 </body>
 </html>
-v>`).join('')}</div>
-    <div class="db-card"><h3>⚠️ Needs Confirmation (${needsConfirm.length})</h3>${needsConfirm.length===0?'<div style="color:#475569;font-size:11px">None</div>':needsConfirm.slice(0,4).map(j=>`<div class="db-flag amber"><div class="db-flag-co">${esc(j.co)}</div><div class="db-flag-meta">${esc(j.role)}</div></div>`).join('')}</div>
-  </div>
-
-  <div class="db-section-title">🎯 90% Skill Roles</div>
-  <div class="db-grid">
-    <div class="db-card"><h3>Total Screened</h3><div class="db-big">${sk90.length}</div><div class="db-sub">via 90% Skill</div></div>
-    <div class="db-card"><h3>Submitted</h3><div class="db-big" style="color:#4ADE80">${sk90submitted.length}</div><div class="db-sub">of ${sk90.length} screened</div></div>
-    <div class="db-card"><h3>Signals</h3><div class="db-big" style="color:#F59E0B">${sk90signals.length}</div><div class="db-sub">viewed / screened / advancing</div></div>
-    <div class="db-card"><h3>Conversion Rate</h3><div class="db-big" style="color:#93C5FD">${sk90submitted.length?Math.round(sk90signals.length/sk90submitted.length*100)+'%':'—'}</div><div class="db-sub">signals per submission</div></div>
-  </div>
-`;
-  el.innerHTML=html;
-  }catch(e){el.innerHTML='<div style="color:#EF4444;padding:20px">Dashboard error: '+e.message+'</div>';}
-}
-
-function initAll(){
-  initStats();
-  render();
-  buildDashboard();
-  initBanner();
-}
-
-document.addEventListener('DOMContentLoaded',function(){
-  loadJobs();
-  initAll();
-});
-</script>
-</body>
-</html>
