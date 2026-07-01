@@ -213,7 +213,7 @@ td{padding:7px 9px;vertical-align:middle}
 <div class="header">
   <div class="header-row">
     <div>
-      <div class="header-label">Master Job Tracker · v7 · 108 rows · Jun 28, 2026</div>
+      <div class="header-label">Master Job Tracker · v7c · 126 rows · Jun 30, 2026</div>
       <div class="header-name">Salah ALAWSY</div>
       <div class="header-sub">Surrey, BC &nbsp;·&nbsp; June 2026 &nbsp;·&nbsp; <span id="total-count"></span> roles tracked &nbsp;·&nbsp;
         <span style="color:#4ADE80;font-size:11px">🔥 HOT: CRS Procurement (Squamish) — WPS screened positive, forwarding to client</span>
@@ -224,7 +224,7 @@ td{padding:7px 9px;vertical-align:middle}
           <span style="color:#64748B">📅 Today:</span>
           <span style="color:#38BDF8;font-weight:600" id="today-display"></span>
         </div>
-        <div style="font-size:10px;color:#475569;font-family:monospace">Last updated: Jun 28, 2026 — 108 rows</div>
+        <div style="font-size:10px;color:#475569;font-family:monospace">Last updated: Jun 30, 2026 — 126 rows</div>
       </div>
     </div>
     <div class="header-contact">
@@ -271,6 +271,7 @@ td{padding:7px 9px;vertical-align:middle}
   <div class="filters"><div id="pills"></div></div>
   <div class="btns">
     <input type="date" id="dateFilterInput" onchange="filterByDate(this.value)" title="Filter by date applied" style="background:#1e293b;border:1px solid #475569;color:#CBD5E1;border-radius:6px;padding:5px 8px;font-size:13px;cursor:pointer;">
+    <button onclick="document.getElementById('dateFilterInput').value='';filterByDate('');" title="Clear date filter — show all rows" style="background:#334155;border:1px solid #475569;color:#94A3B8;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;">✕ All</button>
     <button class="btn" onclick="sortBy('priority')" id="sortPriorityBtn">↓ Priority</button>
     <button class="btn" onclick="sortBy('date')" id="sortDateBtn">↓ Date Applied</button>
     <button class="btn btn-blue" onclick="openAddModal()">+ Add Role</button>
