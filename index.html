@@ -1327,6 +1327,130 @@ function buildDashboard(){
   }catch(e){ el.innerHTML='<div style="color:#EF4444;padding:20px">Dashboard error: '+e.message+'</div>'; }
 }
 
+// ═══════════════════════════════════════════════════
+// FOLLOW-UPS TAB
+// ═══════════════════════════════════════════════════
+function buildFollowups(){
+  const el=document.getElementById('fu-content');if(!el)return;
+  try{
+    const today=new Date();today.setHours(0,0,0,0);
+    const plus7=new Date(today);plus7.setDate(today.getDate()+7);
+    function parseFU(v){
+      if(!v||v==='—'||v==='To confirm')return null;
+      const d=new Date(v);return isNaN(d)?null:d;
+    }
+    const active=jobs.filter(j=>j&&j.status!=='closed');
+    const overdue=active.filter(j=>{const d=parseFU(j.followup);return d&&d<today;});
+    const dueToday=active.filter(j=>{const d=parseFU(j.followup);return d&&d.getTime()===today.getTime();});
+    const dueSoon=active.filter(j=>{const d=parseFU(j.followup);return d&&d>today&&d<=plus7;});
+    const hot=active.filter(j=>j.status==='hot');
+
+    function section(title,cls,dateCls,list){
+      if(list.length===0)return '';
+      const items=list.map(j=>`
+        <div class="fu-item ${cls}">
+          <div>
+            <div class="fu-co">${esc(j.co)}</div>
+            <div class="fu-role">${esc(j.role)} · ${esc(j.loc)}</div>
+            <div class="fu-meta">${esc(j.statusLabel||j.status)}</div>
+          </div>
+          <div class="fu-date ${dateCls}">${fmtFollowup(j.followup)}</div>
+          <div class="fu-action">${esc(j.next||'—')}</div>
+        </div>`).join('');
+      return `<div class="fu-section">
+        <div class="fu-section-hdr">${title} <span class="fu-count">${list.length}</span></div>
+        ${items}
+      </div>`;
+    }
+
+    let html = section('🚨 Overdue','overdue','overdue',overdue)
+             + section('📅 Due Today','due-today','today',dueToday)
+             + section('⏰ Due This Week','due-soon','soon',dueSoon)
+             + section('🔥 Hot Roles','hot-item','',hot);
+
+    el.innerHTML = html || '<div style="color:#64748B;padding:20px;text-align:center">No follow-ups due right now.</div>';
+  }catch(e){
+    el.innerHTML = '<div style="color:#EF4444;padding:20px">Follow-ups error: '+e.message+'</div>';
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// 90% SKILL TAB
+// ═══════════════════════════════════════════════════
+function buildSkillTab(){
+  const el=document.getElementById('sk-content');if(!el)return;
+  try{
+    const sk90=jobs.filter(j=>j&&j.skillSource==='90% Skill');
+    const submitted=sk90.filter(j=>j.applied&&j.applied!=='—');
+    const withSignal=sk90.filter(j=>/(advancing|screened|viewed|interview)/i.test((j.statusLabel||'')+(j.employerSignal||'')));
+    const avgFit = sk90.length
+      ? Math.round(sk90.reduce((sum,j)=>sum+(fitScoreNum(j.skillFitScore)||0),0)/sk90.length)
+      : 0;
+
+    const metrics = `
+      <div class="sk-metrics">
+        <div class="sk-metric"><div class="v">${sk90.length}</div><div class="l">90% Skill Roles</div></div>
+        <div class="sk-metric"><div class="v">${submitted.length}</div><div class="l">Submitted</div></div>
+        <div class="sk-metric"><div class="v">${withSignal.length}</div><div class="l">Positive Signal</div></div>
+        <div class="sk-metric"><div class="v">${avgFit}</div><div class="l">Avg Fit Score</div></div>
+      </div>`;
+
+    const rows = sk90.length===0
+      ? `<tr><td colspan="6" style="color:#64748B;text-align:center;padding:20px">No 90% Skill roles yet.</td></tr>`
+      : sk90.map(j=>`
+        <tr>
+          <td>${esc(j.co)}</td>
+          <td>${esc(j.role)}</td>
+          <td>${esc(j.loc)}</td>
+          <td style="color:${scoreColor(fitScoreNum(j.skillFitScore)||0)}">${fitDisplay(j.skillFitScore)}</td>
+          <td>${esc(j.status)}</td>
+          <td>${esc(j.statusLabel||'—')}</td>
+        </tr>`).join('');
+
+    el.innerHTML = metrics + `
+      <table class="sk-tbl">
+        <thead><tr>
+          <th>Company</th><th>Role</th><th>Location</th><th>Fit</th><th>Status</th><th>Notes</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }catch(e){
+    el.innerHTML = '<div style="color:#EF4444;padding:20px">90% Skill tab error: '+e.message+'</div>';
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// CLOSED / REJECTED TAB
+// ═══════════════════════════════════════════════════
+function buildClosed(){
+  const tbl=document.getElementById('closed-tbl');
+  const empty=document.getElementById('closed-empty');
+  if(!tbl)return;
+  try{
+    const closed=jobs.filter(j=>j&&j.status==='closed');
+    if(closed.length===0){
+      tbl.innerHTML='';
+      if(empty)empty.style.display='';
+      return;
+    }
+    if(empty)empty.style.display='none';
+    tbl.innerHTML = closed.map(j=>`
+      <tr>
+        <td>${j.id}</td>
+        <td>${esc(j.co)}</td>
+        <td>${esc(j.role)}</td>
+        <td>${esc(j.loc)}</td>
+        <td>${esc(j.applied)||'—'}</td>
+        <td>${esc(j.source)||'—'}</td>
+        <td>${fitDisplay(j.skillFitScore)}</td>
+        <td>${esc(j.statusLabel||j.outcomeCategory||'—')}</td>
+        <td>${esc(j.notes)||'—'}</td>
+      </tr>`).join('');
+  }catch(e){
+    tbl.innerHTML = `<tr><td colspan="9" style="color:#EF4444;padding:20px">Closed tab error: ${e.message}</td></tr>`;
+  }
+}
+
 function initAll(){
   initStats();
   render();
